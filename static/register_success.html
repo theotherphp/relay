@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+    <script>
+        window.onload = function() {
+            setTimeout(function () {
+                window.location.href = "/register"; 
+            }, 2000); // 2 seconds
+        }
+    </script>
+{% end %}
+
+{% block body %}
+    <h2> Good to go! </h2>
+{% end %}
+

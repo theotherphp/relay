@@ -1,0 +1,38 @@
+{% extends "base-pure.html" %}
+
+{% block body %}
+    <div class="pure-g">
+        <div class="pure-u-1-24">
+        </div>
+        <div class="pure-u-3-5">
+            <h2>{{title}}</h2>       
+            <form class="pure-form pure-form-aligned" action="/register" method="post">
+
+                <div class="pure-control-group">
+                    <label>Name</label>
+                    <input type="text" name="name" placeholder="Type your name here">
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="team_id">Team</label>
+                    <select name="team_id">
+                        {% for team in teams %}
+                            <option value="{{team['id']}}">{{team['name']}} ({{team['captain']}})</option>
+                        {% end %}
+                    </select>
+                </div>
+
+                    <div class="pure-control-group">
+                    <label for="wristband">Wristband number</label>
+                    <input type="number" name="wristband">
+                </div>
+
+                <div class="pure-control-group pure-u-2-5" align="right">
+                    <button type="reset" class="pure-button">Cancel</button>
+                    <button type="submit" class="pure-button pure-button-primary relay-button-primary">Register</button>
+                </div>
+
+            </form>
+         </div>
+    </div>
+{% end %}

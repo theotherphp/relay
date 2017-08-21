@@ -1,0 +1,52 @@
+{% extends "base-pure.html" %}
+
+{% block refresh %}
+    <meta http-equiv="refresh" content="5">
+{% end %}
+
+{% block body %}
+    <h2> {{ title }} </h2>
+
+    <div class="pure-u-1-5">
+        <table class="pure-table">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Laps</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in teams %}
+                    <tr class="{{ t['css_class'] }}">
+                        <td>{{ t['name'] }}</td>
+                        <td>{{ t['laps'] }}</td>
+                    </tr>
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pure-u-3-5">
+        <table class="pure-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Laps</th>
+                    <th>Team</th>
+                    <th>Most Recent Lap</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for w in walkers %}
+                    <tr>
+                        <td>{{ w['name'] }}</td>
+                        <td>{{ w['laps'] }}</td>
+                        <td><span class="{{ w['css_class'] }}">{{ w['team_name'] }}</span></td>
+                        <td>{{ datetime.datetime.fromtimestamp(w['last_updated_time']).strftime("%I:%M:%S %p").lstrip('0') }}</td>
+                    </tr>
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+
+{% end %}

@@ -1,0 +1,14 @@
+{% extends "base-pure.html" %}
+
+{% block scripts %}
+    <script src="dropzone.js"></script>
+{% end %}
+
+{% block style %}
+    <link rel="stylesheet" href="dropzone.css">
+{% end %}
+
+{% block body %}
+    <p>Drag and drop the teams file here</p>
+    <form action="/teams" method="post" class="dropzone"></form>
+{% end %}
