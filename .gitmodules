@@ -1,0 +1,4 @@
+[submodule "static/Lap-Counter-Viewer"]
+	path = static/Lap-Counter-Viewer
+	url = https://github.com/spencer-p/Lap-Counter-Viewer.git
+	branch = master

@@ -1,3 +1,4 @@
-tornado==4.5.1
-rethinkdb==2.3.0.post6
 requests==2.18.4
+rethinkdb==2.3.0.post6
+tornado==4.5.1
+websocket-client==0.44.0

@@ -1,6 +1,8 @@
 # Relay-specific stuff not covered below
 sd-backups/
 rethinkdb_data/
+static/Lap-Counter/Viewer/
+.gitmodules
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

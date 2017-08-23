@@ -103,4 +103,5 @@ def walk_laps(tag_ids):
 if __name__ == '__main__':
 	teams = populate_teams()
 	tag_ids = populate_walkers(teams)
-	walk_laps(tag_ids)
+	print 'tag_ids: %s' % tag_ids
+	# walk_laps(tag_ids)
