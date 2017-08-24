@@ -12,8 +12,8 @@ from tornado.httpserver import HTTPServer
 
 from relay_db import RelayDB
 from relay_rest import MainHandler, RegisterHandler, RegisterSuccessHandler,\
-    TeamsHandler, LeaderboardHandler
-from relay_feeds import LeaderboardWSHandler
+    TeamsHandler
+# from relay_feeds import LeaderboardWSHandler
 
 import logging
 logging.basicConfig(
@@ -42,12 +42,9 @@ def run_app():
         (r'/', MainHandler, handler_args),
         (r'/register', RegisterHandler, handler_args),
         (r'/register_success', RegisterSuccessHandler, handler_args),
-        (r'/leaderboard', LeaderboardHandler, handler_args),
-        # (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),
         (r'/teams', TeamsHandler, handler_args),
         (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
         (r'/(vue-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
-        (r'/(team_colors\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
     ], autoreload=True, **app_settings)
     server = HTTPServer(app)
     server.listen(8888)

@@ -38,6 +38,7 @@ class RegisterHandler(RelayHandler):
         walker['laps'] = 0
         walker['last_updated_time'] = 0.0
         walker['wristband'] = int(walker['wristband'])
+        walker['team_id'] = int(walker['team_id'])
         # TODO walker['id'] = self.db.get_tag_id_by_wristband(walker['wristband'])
 
 
@@ -47,28 +48,6 @@ class RegisterSuccessHandler(RelayHandler):
             'static/register_success.html',
             title='Success'
         )
-
-
-class LeaderboardHandler(RelayHandler):
-    # Provide leaderboard page
-    def get(self):
-        self.render(
-            'static/leaderboard.html',
-            title='Leaderboard',
-            walkers=self.db.get_walkers_by('laps', 25),
-            teams=self.db.get_teams_by('laps', 10)
-        )
-
-    # Post laps walked to the DB
-    def post(self):
-        tags = self.get_body_argument('rfid_tags_read')
-        if tags is None:
-            logging.error('malformed post %s' % self.request.body)
-            self.send_error(status_code=400, kwargs={'malformed': self.request.body})
-        else:
-            self.db.post_laps(tags.split(','))
-            self.finish('OK')
-
 
 class TeamsHandler(RelayHandler):
     def get(self):
@@ -80,15 +59,10 @@ class TeamsHandler(RelayHandler):
     def post(self):
         teams = json.loads(self.request.body)
         self._init_teams(teams)
-        generated_keys = self.db.insert_teams(teams)
-        self.finish(json.dumps(generated_keys))
+        self.db.insert_teams(teams)
+        self.finish()
 
     def _init_teams(self, teams):
-        color_index = 0
-        for t in teams:
-            t['laps'] = 0
-            t['css_class'] = 'team_' + str(color_index)
-            color_index = color_index + 1
-            if color_index > 31:  # hard-coded limit in team_colors.css
-                logging.warn('wrapping CSS color index')
-                color_index = 0
+        for i in range(0, len(teams)):
+            teams[i]['laps'] = 0
+            teams[i]['id'] = i  # generated keys are so ugly

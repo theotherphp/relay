@@ -10,7 +10,7 @@ from tornado.httpserver import HTTPServer
 
 from relay_db import RelayDB
 from relay_rest import MainHandler, RegisterHandler, RegisterSuccessHandler,\
-    TeamsHandler, LeaderboardHandler
+    TeamsHandler
 from relay_feeds import LeaderboardWSHandler, print_leaderboard_changes, print_ticker_changes
 
 import logging

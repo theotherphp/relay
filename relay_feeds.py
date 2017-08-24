@@ -30,9 +30,10 @@ class LeaderboardWSHandler(WebSocketHandler):
         tags = message.split(',')
         now = time.time()
         # Get the walkers matching these tags
-        cur = yield r.table('walkers').get_all(r.args(tags)).filter(
-            r.row['last_updated_time'] < now - DEDUPLICATION_THRESHOLD
-        ).run(self.conn)
+        if self.conn is None:
+            logging.debug('how did this happen')
+            self.conn = yield r.connect(db='relay')
+        cur = yield r.table('walkers').get_all(r.args(tags)).filter(r.row['last_updated_time'] < now - DEDUPLICATION_THRESHOLD).run(self.conn)
         id_list = []
         team_list = []
         while (yield cur.fetch_next()):
@@ -46,6 +47,7 @@ class LeaderboardWSHandler(WebSocketHandler):
             'last_updated_time': now
         }).run(self.conn)
         # Update lap counts for walkers' teams
+        logging.debug('team list: %s' % team_list)
         yield r.table('teams').get_all(r.args(team_list)).update({
             'laps': r.row['laps'] + 1
         }).run(self.conn)

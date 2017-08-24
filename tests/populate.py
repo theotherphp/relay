@@ -6,9 +6,10 @@ from random import random
 from time import sleep
 import requests
 import json
+import websocket
+
 
 HOSTPORT = 'http://localhost:8888'
-
 
 def populate_teams():
 	teams = [
@@ -38,10 +39,8 @@ def populate_teams():
 	    }
 	]
 	resp = requests.post(HOSTPORT + '/teams', json=teams)
-	team_ids = json.loads(resp.text)
-
-	for i in range(0, len(team_ids)):
-		teams[i]['id'] = team_ids[i]
+	for i in range(0, len(teams)):
+		teams[i]['id'] = i  # hack
 	return teams
 
 
@@ -93,10 +92,10 @@ def populate_walkers(teams):
 
 
 def walk_laps(tag_ids):
+	ws = websocket.create_connection('ws://localhost:8889' + '/leaderboard_ws')
 	while True:
 	    tag = tag_ids[int(random() * len(tag_ids))]
-	    payload = {'rfid_tags_read': tag}
-	    requests.post(HOSTPORT + '/leaderboard', payload)
+	    ws.send(tag)
 	    sleep(1)
 
 
@@ -104,4 +103,4 @@ if __name__ == '__main__':
 	teams = populate_teams()
 	tag_ids = populate_walkers(teams)
 	print 'tag_ids: %s' % tag_ids
-	# walk_laps(tag_ids)
+	walk_laps(tag_ids)
