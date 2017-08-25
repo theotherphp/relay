@@ -13,7 +13,7 @@ from tornado.httpserver import HTTPServer
 from relay_db import RelayDB
 from relay_rest import MainHandler, RegisterHandler, RegisterSuccessHandler,\
     TeamsHandler
-# from relay_feeds import LeaderboardWSHandler
+from relay_feeds import LeaderboardWSHandler, notice_team_changes, notice_walker_changes
 
 import logging
 logging.basicConfig(
@@ -32,7 +32,7 @@ def sig_handler(server, sig, frame):
 
 def run_app():
     db = RelayDB()
-    db.open()
+    IOLoop.instance().run_sync(db.open)
     handler_args = dict(db=db)
     app_settings = {
         'static_path': os.path.join(os.path.dirname(__file__), 'static'),
@@ -40,6 +40,7 @@ def run_app():
     }
     app = Application([
         (r'/', MainHandler, handler_args),
+        (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),
         (r'/register', RegisterHandler, handler_args),
         (r'/register_success', RegisterSuccessHandler, handler_args),
         (r'/teams', TeamsHandler, handler_args),
@@ -50,7 +51,8 @@ def run_app():
     server.listen(8888)
     signal(SIGTERM, partial(sig_handler, server))
     signal(SIGINT, partial(sig_handler, server))
-    # IOLoop.current().add_callback(print_changes)
+    IOLoop.current().add_callback(notice_team_changes, **handler_args)
+    IOLoop.current().add_callback(notice_walker_changes, **handler_args)
     IOLoop.instance().start()
     db.close()  # Close the DB cleanly to avoid corruption
 

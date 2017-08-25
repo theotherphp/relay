@@ -79,12 +79,13 @@ def populate_walkers(teams):
 		walkers[tag_id] = {
 			'name' : name,
 			'team_id': teams[team_index]['id'],
-			'team_name': teams[team_index]['name'],
+			# 'team_name': teams[team_index]['name'],
 			'wristband': count
 		}
 
 	for k,v in walkers.iteritems():
-		payload = {'name': v['name'], 'team_id': v['team_id'], 'team_name': v['team_name'], 'wristband': v['wristband'], 'id': k}
+		# payload = {'name': v['name'], 'team_id': v['team_id'], 'team_name': v['team_name'], 'wristband': v['wristband'], 'id': k}
+		payload = {'name': v['name'], 'team_id': v['team_id'], 'wristband': v['wristband'], 'id': k}
 		requests.post(HOSTPORT + '/register', payload)
 		sleep(0.1)
 
@@ -92,7 +93,7 @@ def populate_walkers(teams):
 
 
 def walk_laps(tag_ids):
-	ws = websocket.create_connection('ws://localhost:8889' + '/leaderboard_ws')
+	ws = websocket.create_connection('ws://localhost:8888' + '/leaderboard_ws')
 	while True:
 	    tag = tag_ids[int(random() * len(tag_ids))]
 	    ws.send(tag)
