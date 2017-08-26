@@ -28,6 +28,7 @@ class LeaderboardWSHandler(WebSocketHandler):
 
     @coroutine
     def on_close(self):
+        logging.debug('WebSocketHandler on_close')
         for i, client in enumerate(clients):
             if client is self:
                 del clients[i]

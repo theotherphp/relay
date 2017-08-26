@@ -43,7 +43,7 @@ class RelayDB(object):
             result = yield r.table(table).sync().run(self.conn)
             if result is None or result.get('synced') != 1:
                 log.error('sync %s failed' % table)
-        yield self.conn.close()
+        self.conn.close()
         delta = dt.now() - then
         duration = delta.seconds + (delta.microseconds/MICROS_PER_SEC)
         logging.debug('closed in %f secs' % duration)

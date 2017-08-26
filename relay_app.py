@@ -54,7 +54,7 @@ def run_app():
     IOLoop.current().add_callback(notice_team_changes, **handler_args)
     IOLoop.current().add_callback(notice_walker_changes, **handler_args)
     IOLoop.instance().start()
-    db.close()  # Close the DB cleanly to avoid corruption
+    IOLoop.instance().run_sync(db.close)  # Close the DB cleanly to avoid corruption
 
 
 if __name__ == '__main__':
