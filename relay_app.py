@@ -11,9 +11,11 @@ from tornado.web import Application, StaticFileHandler
 from tornado.httpserver import HTTPServer
 
 from relay_db import RelayDB
-from relay_rest import MainHandler, RegisterHandler, RegisterSuccessHandler,\
-    TeamsHandler
+from relay_rest import MainHandler, \
+    RegisterHandler, RegisterSuccessHandler, \
+    TagsHandler, TeamsHandler
 from relay_feeds import LeaderboardWSHandler, notice_team_changes, notice_walker_changes
+from tests.relay_config import Config
 
 import logging
 logging.basicConfig(
@@ -43,12 +45,13 @@ def run_app():
         (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),
         (r'/register', RegisterHandler, handler_args),
         (r'/register_success', RegisterSuccessHandler, handler_args),
+        (r'/tags', TagsHandler, handler_args),
         (r'/teams', TeamsHandler, handler_args),
         (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
-        (r'/(vue-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
     ], autoreload=True, **app_settings)
+    cfg = Config()
     server = HTTPServer(app)
-    server.listen(8888)
+    server.listen(cfg.app_port)
     signal(SIGTERM, partial(sig_handler, server))
     signal(SIGINT, partial(sig_handler, server))
     IOLoop.current().add_callback(notice_team_changes, **handler_args)

@@ -4,8 +4,10 @@ from datetime import datetime as dt
 import time
 from tornado.gen import coroutine, Return
 
+from tests.relay_config import Config
 
-DB_NAME = 'relay'
+cfg = Config()
+DB_NAME = cfg.db_name
 WALKER_TABLE = 'walkers'
 TEAM_TABLE = 'teams'
 MICROS_PER_SEC = 1000000.0
@@ -64,8 +66,17 @@ class RelayDB(object):
         while (yield cur.fetch_next()):
             team = yield cur.next()
             teams.append(team)
-        yield teams
+        raise Return(teams)
 
+
+    @coroutine
+    def get_tags(self):
+        tags = []
+        cur = yield r.table(WALKER_TABLE).with_fields('id').run(self.conn)
+        while (yield cur.fetch_next()):
+            item = yield cur.next()
+            tags.append(item['id'])
+        raise Return(tags)
 
     @coroutine
     def insert_walker(self, walker):
@@ -110,7 +121,7 @@ class RelayDB(object):
             team_list.append(walker['team_id'])
         # Update lap counts for non-duplicate walkers
         # Duplicates could be multiple reads of the same tag, or someone trying to cheat
-        yield r.table(WALKER_TABLE).get_all(r.args(id_list)).update({
+        changes = yield r.table(WALKER_TABLE).get_all(r.args(id_list)).update({
             'laps': r.row['laps'] + 1,
             'last_updated_time': now
         }).run(self.conn)

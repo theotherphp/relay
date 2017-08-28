@@ -7,9 +7,9 @@ from time import sleep
 import requests
 import json
 import websocket
+import argparse
 
-
-HOSTPORT = 'http://localhost:8888'
+from relay_config import Config
 
 def populate_teams():
 	teams = [
@@ -36,9 +36,26 @@ def populate_teams():
 	    {
 	        'name': 'Patriots',
 	        'captain': 'Tom Brady',
-	    }
+	    },
+	    {
+	        'name': 'Yankees',
+	        'captain': 'Derek Jeter',
+	    },
+	    {
+	        'name': 'Red Sox',
+	        'captain': 'Roger Clemens',
+	    },
+	    {
+	        'name': 'Sharks',
+	        'captain': 'Joe Thornton',
+	    },
+	    {
+	        'name': 'Giants',
+	        'captain': 'Buster Posey',
+	    },
 	]
-	resp = requests.post(HOSTPORT + '/teams', json=teams)
+	cfg = Config()
+	resp = requests.post(cfg.rest_url('/teams'), json=teams)
 	for i in range(0, len(teams)):
 		teams[i]['id'] = i  # hack
 	return teams
@@ -60,12 +77,12 @@ def populate_walkers(teams):
 
 	names = []
 	for i in range(0,100):
-		name = male_first_names[int(random() * len(male_first_names))] + ' ' + \
+		name = male_first_names[int(random() * len(male_first_names))].title() + ' ' + \
 			last_names[int(random() * len(last_names))]
 		if not name in names:
 			names.append(name)
 
-		name = female_first_names[int(random() * len(female_first_names))] + ' ' + \
+		name = female_first_names[int(random() * len(female_first_names))].title() + ' ' + \
 			last_names[int(random() * len(last_names))]
 		if not name in names:
 			names.append(name)
@@ -82,16 +99,18 @@ def populate_walkers(teams):
 			'wristband': count
 		}
 
+	cfg = Config()
 	for k,v in walkers.iteritems():
 		payload = {'name': v['name'], 'team_id': v['team_id'], 'wristband': v['wristband'], 'id': k}
-		requests.post(HOSTPORT + '/register', payload)
+		requests.post(cfg.rest_url('/register'), payload)
 		sleep(0.1)
 
 	return walkers.keys()
 
 
 def walk_laps(tag_ids):
-	ws = websocket.create_connection('ws://localhost:8888' + '/leaderboard_ws')
+	cfg = Config()
+	ws = websocket.create_connection(cfg.websocket_url())
 	while True:
 	    tag = tag_ids[int(random() * len(tag_ids))]
 	    ws.send(tag)
@@ -99,7 +118,17 @@ def walk_laps(tag_ids):
 
 
 if __name__ == '__main__':
-	teams = populate_teams()
-	tag_ids = populate_walkers(teams)
-	print 'tag_ids: %s' % tag_ids
+	parser = argparse.ArgumentParser(description='Make up some fake data for testing')
+	parser.add_argument('--from-scratch', action='store_true', default=False, \
+		help='Generate teams and walkers into an empty DB. Otherwise use existing DB')
+	ns = parser.parse_args()
+
+	cfg = Config()
+	if ns.from_scratch:
+		teams = populate_teams()
+		tag_ids = populate_walkers(teams)
+	else:
+		resp = requests.get(cfg.rest_url('/tags'))
+		tag_ids = json.loads(resp.text)
+
 	walk_laps(tag_ids)

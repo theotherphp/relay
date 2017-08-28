@@ -3,8 +3,10 @@ RESTful API handlers for Relay web pages
 """
 
 from tornado.web import RequestHandler
+from tornado.gen import coroutine
 from urlparse import parse_qsl
 import json
+import logging
 
 
 # Base class for all our RequestHandlers to have access to the DB
@@ -48,6 +50,20 @@ class RegisterSuccessHandler(RelayHandler):
             'static/register_success.html',
             title='Success'
         )
+
+
+class TagsHandler(RelayHandler):
+    @coroutine
+    def get(self):
+        # Used by populate.py test script to simulate tag reads
+        tags = yield self.db.get_tags()
+        self.write(json.dumps(tags))
+        self.finish()
+
+    def post(self):
+        # Maybe this is how to do inventory of tags on hand?
+        raise NotImplementedError
+
 
 class TeamsHandler(RelayHandler):
     def get(self):
