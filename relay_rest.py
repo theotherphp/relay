@@ -22,11 +22,18 @@ class MainHandler(RelayHandler):
 
 class RegisterHandler(RelayHandler):
     # Provide the registration page for one walker
+    @coroutine
     def get(self):
+        teams = yield self.db.get_teams()
+        # self.render(
+        #     'static/register.html',
+        #     title='Register for Relay',
+        #     teams=teams
+        # )
         self.render(
-            'static/register.html',
-            title='Register for Relay',
-            teams=self.db.get_teams()
+            'static/register_ws.html',
+            # title='Register for Relay',
+            # teams=teams
         )
 
     # Add walker(s) to the DB so we can count their laps

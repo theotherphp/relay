@@ -10,6 +10,7 @@ cfg = Config()
 DB_NAME = cfg.db_name
 WALKER_TABLE = 'walkers'
 TEAM_TABLE = 'teams'
+INVENTORY_TABLE = 'inventory'
 MICROS_PER_SEC = 1000000.0
 LAP_DEDUPLICATION_THRESHOLD = 2  # *60  # 2 minutes
 
@@ -36,6 +37,9 @@ class RelayDB(object):
             yield r.db(DB_NAME).table_create(TEAM_TABLE, durability='soft').run(self.conn)
             yield r.table(TEAM_TABLE).index_create('laps').run(self.conn)
             yield r.table(TEAM_TABLE).index_wait().run(self.conn)
+            yield r.db(DB_NAME).table_create(INVENTORY_TABLE, durability='soft').run(self.conn)
+            yield r.table(INVENTORY_TABLE).index_create('reader_id').run(self.conn)
+            yield r.table(INVENTORY_TABLE).index_wait().run(self.conn)
 
 
     @coroutine
@@ -129,3 +133,24 @@ class RelayDB(object):
         yield r.table(TEAM_TABLE).get_all(r.args(team_list)).update({
             'laps': r.row['laps'] + 1
         }).run(self.conn)
+
+
+    @coroutine
+    def add_to_inventory(self, inventory):
+        for t in inventory['tag_ids']:
+            cur = yield r.table(INVENTORY_TABLE).get_all(t).run(self.conn)
+            length = 0
+            while (yield cur.fetch_next()):
+                item = yield cur.next()
+                length += 1
+            if length > 0:
+                logging.warn('tag_id %s already in inventory' % t)
+            else:
+                tag_info = dict(
+                    id=t,
+                    reader_id=inventory['reader_id'],
+                    last_updated_time=time.time()
+                )
+                result = yield r.table(INVENTORY_TABLE).insert(tag_info).run(self.conn)
+                if result is None or result.get('errors') != 0:
+                    logging.error('add_to_inventory %s' % result)

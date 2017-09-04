@@ -14,7 +14,9 @@ from relay_db import RelayDB
 from relay_rest import MainHandler, \
     RegisterHandler, RegisterSuccessHandler, \
     TagsHandler, TeamsHandler
-from relay_feeds import LeaderboardWSHandler, notice_team_changes, notice_walker_changes
+from relay_feeds import LeaderboardWSHandler, notice_team_changes, notice_walker_changes,\
+InventoryWSHandler, notice_inventory_changes
+
 from tests.relay_config import Config
 
 import logging
@@ -42,12 +44,14 @@ def run_app():
     }
     app = Application([
         (r'/', MainHandler, handler_args),
-        (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),
+        (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),        
+        (r'/inventory_ws', InventoryWSHandler, handler_args),
         (r'/register', RegisterHandler, handler_args),
         (r'/register_success', RegisterSuccessHandler, handler_args),
         (r'/tags', TagsHandler, handler_args),
         (r'/teams', TeamsHandler, handler_args),
         (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
+        (r'/(register\.js)', StaticFileHandler, dict(path=app_settings['static_path'])),
     ], autoreload=True, **app_settings)
     cfg = Config()
     server = HTTPServer(app)
@@ -56,6 +60,7 @@ def run_app():
     signal(SIGINT, partial(sig_handler, server))
     IOLoop.current().add_callback(notice_team_changes, **handler_args)
     IOLoop.current().add_callback(notice_walker_changes, **handler_args)
+    IOLoop.current().add_callback(notice_inventory_changes, **handler_args)
     IOLoop.instance().start()
     IOLoop.instance().run_sync(db.close)  # Close the DB cleanly to avoid corruption
 
