@@ -39,7 +39,7 @@ function initialize() {
 function ws_connect() {
     hostname = (navigator.platform == "MacIntel") ? "10.0.1.20" : "relay.local";
     url = "ws://" + hostname + ":8888/inventory_ws";
-    socket = new WebSocket(url);
+    socket = new ReconnectingWebSocket(url);
     socket.onopen = e => console.log(e);
     socket.onclose = e => console.log(e);
     socket.onerror = e => console.log(e);
