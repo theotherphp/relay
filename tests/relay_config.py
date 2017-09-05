@@ -29,7 +29,19 @@ class Config(object):
     @property
     def db_name(self):
         return 'relay'
-        
+
+    @property
+    def walker_table(self):
+        return 'walkers'
+
+    @property
+    def inventory_table(self):
+        return 'inventory'
+
+    @property
+    def team_table(self):
+        return 'teams'
+
     def websocket_url(self):
         return 'ws://' + self.app_host + ':' + self.app_port + '/leaderboard_ws'
 
@@ -38,3 +50,5 @@ class Config(object):
 
     def inventory_url(self):
         return 'ws://' + self.app_host + ':' + self.app_port + '/inventory_ws'
+
+cfg = Config()

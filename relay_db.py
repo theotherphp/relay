@@ -4,13 +4,12 @@ from datetime import datetime as dt
 import time
 from tornado.gen import coroutine, Return
 
-from tests.relay_config import Config
+from tests.relay_config import cfg
 
-cfg = Config()
 DB_NAME = cfg.db_name
-WALKER_TABLE = 'walkers'
-TEAM_TABLE = 'teams'
-INVENTORY_TABLE = 'inventory'
+WALKER_TABLE = cfg.walker_table
+TEAM_TABLE = cfg.team_table
+INVENTORY_TABLE = cfg.inventory_table
 MICROS_PER_SEC = 1000000.0
 LAP_DEDUPLICATION_THRESHOLD = 2  # *60  # 2 minutes
 

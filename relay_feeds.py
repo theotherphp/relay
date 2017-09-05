@@ -9,93 +9,94 @@ import rethinkdb as r
 from tornado.ioloop import IOLoop
 import json
 
+from tests.relay_config import cfg
 
-clients = []
-
-class LeaderboardWSHandler(WebSocketHandler):
+"""
+Base class for Websockets bookkeeping
+"""
+class RelayWSHandler(WebSocketHandler):
     def initialize(self, db):
         self.db = db
+        # per-instance access to global/static member data
+        self.clients = self.get_clients()  
 
     @coroutine
     def open(self):
         self.stream.set_nodelay(True)
-        if self not in clients:
-            clients.append(self)
+        if self not in self.clients:
+            self.clients.append(self)
+
+    @coroutine
+    def on_close(self):
+        for i, client in enumerate(self.clients):
+            if client is self:
+                del self.clients[i]
+                return
+
+    def check_origin(self, origin):
+        return True  # Unrestricted access for now
+
+
+"""
+Supports dynamic lap counts for walkers and teams. 
+Consumed by Spencer's Lap-Counter-Viewer JS app
+"""
+class LeaderboardWSHandler(RelayWSHandler):
+    clients = []
+
+    def get_clients(self):
+        return LeaderboardWSHandler.clients
 
     @coroutine
     def on_message(self, message):
         tags = message.split(',')
         self.db.increment_laps(tags)
 
-    @coroutine
-    def on_close(self):
-        logging.debug('WebSocketHandler on_close')
-        for i, client in enumerate(clients):
-            if client is self:
-                del clients[i]
-                return
-
-    def check_origin(self, origin):
-        # Unrestricted access for now
-        return True
-
 
 @coroutine
 def notice_team_changes(db):
-    feed = yield r.table('teams').order_by(index=r.desc('laps')).limit(10).changes().run(db.conn)
+    feed = yield r.table(cfg.team_table).order_by(index=r.desc('laps'))\
+        .limit(10).changes().run(db.conn)
     while (yield feed.fetch_next()):
         change = yield feed.next()
         if change['new_val']['laps'] > 0:
-            for client in clients:
+            for client in LeaderboardWSHandler.clients:
                 client.write_message({'type': 'leaderboard', 'data': change})
 
 @coroutine
 def notice_walker_changes(db):
-    feed = yield r.table('walkers').changes().run(db.conn)
+    feed = yield r.table(cfg.walker_table).changes().run(db.conn)
     while (yield feed.fetch_next()):
         change = yield feed.next()
         if change['new_val']['laps'] > 0:
-            for client in clients:
+            for client in LeaderboardWSHandler.clients:
                 client.write_message({'type': 'ticker', 'data': change})
 
 
-inventory_clients = []
+"""
+Add tags into inventory. Could be used for:
+1. Bulk-reading inventory of tags to assign them to walkers at file-import time
+2. Assigning tags to walkers at the Relay event using a reader at the volunteer desk
+The reason this is a websocket is to allow the RFID reader to read tags in the client
+python world, but have the tags accessible to web pages. Maybe there's an easier way.
+"""
+class InventoryWSHandler(RelayWSHandler):
+    clients = []
 
-class InventoryWSHandler(WebSocketHandler):
-    def initialize(self, db):
-        self.db = db
-
-    @coroutine
-    def open(self):
-        logging.debug('InventoryWSHandler open')
-        self.stream.set_nodelay(True)
-        if self not in inventory_clients:
-            inventory_clients.append(self)
+    def get_clients(self):
+        return InventoryWSHandler.clients
 
     @coroutine
     def on_message(self, message):
         inventory = json.loads(message)
         self.db.add_to_inventory(inventory)
 
-    @coroutine
-    def on_close(self):
-        logging.debug('InventoryWSHandler on_close')
-        for i, client in enumerate(inventory_clients):
-            if client is self:
-                del inventory_clients[i]
-                return
-
-    def check_origin(self, origin):
-        # Unrestricted access for now
-        return True
 
 @coroutine
 def notice_inventory_changes(db):
-    logging.debug('start inventory change')
-    feed = yield r.table('inventory').changes().run(db.conn)
+    feed = yield r.table(cfg.inventory_table).changes().run(db.conn)
     while (yield feed.fetch_next()):
         change = yield feed.next()
-        for client in inventory_clients:
+        for client in InventoryWSHandler.clients:
             if change.get('new_val') is not None:
-                logging.debug('one inventory change %s ' % change)
                 client.write_message(change['new_val']['id'])
