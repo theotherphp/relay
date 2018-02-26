@@ -8,11 +8,7 @@ import platform
 class Config(object):
     @property
     def app_host(self):
-        s = platform.system()
-        if s == 'Darwin':
-            return '10.0.1.20'
-        elif s == 'Linux':
-            return 'relay.local'
+        return 'localhost'
 
     @property
     def app_port(self):
