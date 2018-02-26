@@ -24,18 +24,22 @@ class RelayDB(object):
         r.set_loop_type('tornado')
         self.conn = yield r.connect(db=DB_NAME)
         db_names = yield r.db_list().run(self.conn)
-        if DB_NAME not in db_names: 
+        if DB_NAME not in db_names:
             logging.debug('creating database')
             yield r.db_create(DB_NAME).run(self.conn)
+        table_names = yield r.table_list().run(self.conn)
+        if WALKER_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(WALKER_TABLE, durability='soft').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('laps').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('name').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('team_id').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('wristband').run(self.conn)
             yield r.table(WALKER_TABLE).index_wait().run(self.conn)
+        if TEAM_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(TEAM_TABLE, durability='soft').run(self.conn)
             yield r.table(TEAM_TABLE).index_create('laps').run(self.conn)
             yield r.table(TEAM_TABLE).index_wait().run(self.conn)
+        if INVENTORY_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(INVENTORY_TABLE, durability='soft').run(self.conn)
             yield r.table(INVENTORY_TABLE).index_create('reader_id').run(self.conn)
             yield r.table(INVENTORY_TABLE).index_wait().run(self.conn)
