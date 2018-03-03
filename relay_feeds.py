@@ -49,14 +49,14 @@ class LeaderboardWSHandler(RelayWSHandler):
 
     @coroutine
     def on_message(self, message):
-        tags = message.split(',')
+        tags = [int(t) for t in message.split(',')]
         self.db.increment_laps(tags)
 
 
 @coroutine
 def notice_team_changes(db):
     feed = yield r.table(cfg.team_table).order_by(index=r.desc('laps'))\
-        .limit(10).changes().run(db.conn)
+        .limit(15).changes().run(db.conn)
     while (yield feed.fetch_next()):
         change = yield feed.next()
         if change['new_val']['laps'] > 0:
@@ -71,32 +71,3 @@ def notice_walker_changes(db):
         if change['new_val']['laps'] > 0:
             for client in LeaderboardWSHandler.clients:
                 client.write_message({'type': 'ticker', 'data': change})
-
-
-"""
-Add tags into inventory. Could be used for:
-1. Bulk-reading inventory of tags to assign them to walkers at file-import time
-2. Assigning tags to walkers at the Relay event using a reader at the volunteer desk
-The reason this is a websocket is to allow the RFID reader to read tags in the client
-python world, but have the tags accessible to web pages. Maybe there's an easier way.
-"""
-class InventoryWSHandler(RelayWSHandler):
-    clients = []
-
-    def get_clients(self):
-        return InventoryWSHandler.clients
-
-    @coroutine
-    def on_message(self, message):
-        inventory = json.loads(message)
-        self.db.add_to_inventory(inventory)
-
-
-@coroutine
-def notice_inventory_changes(db):
-    feed = yield r.table(cfg.inventory_table).changes().run(db.conn)
-    while (yield feed.fetch_next()):
-        change = yield feed.next()
-        for client in InventoryWSHandler.clients:
-            if change.get('new_val') is not None:
-                client.write_message(change['new_val']['id'])

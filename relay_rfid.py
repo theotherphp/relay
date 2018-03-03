@@ -1,3 +1,7 @@
+"""
+Read and write RFID tags for the Relay app
+"""
+
 from functools import partial
 import logging
 from signal import signal, SIGTERM, SIGINT

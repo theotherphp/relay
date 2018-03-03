@@ -38,17 +38,11 @@ class RegisterHandler(RelayHandler):
 
     # Add walker(s) to the DB so we can count their laps
     def post(self):
-        walker = dict(parse_qsl(self.request.body))
-        self._init_walker(walker)
-        self.db.insert_walker(walker)
-        self.redirect('/register_success')
-
-    def _init_walker(self, walker):
-        walker['laps'] = 0
-        walker['last_updated_time'] = 0.0
-        walker['wristband'] = int(walker['wristband'])
-        walker['team_id'] = int(walker['team_id'])
-        # TODO walker['id'] = self.db.get_tag_id_by_wristband(walker['wristband'])
+        walkers = json.loads(self.request.body)
+        for walker in walkers:
+            walker['laps'] = 0
+            walker['last_updated_time'] = 0.0
+        self.db.insert_walkers(walkers)
 
 
 class RegisterSuccessHandler(RelayHandler):

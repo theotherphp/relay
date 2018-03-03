@@ -9,7 +9,6 @@ from tests.relay_config import cfg
 DB_NAME = cfg.db_name
 WALKER_TABLE = cfg.walker_table
 TEAM_TABLE = cfg.team_table
-INVENTORY_TABLE = cfg.inventory_table
 MICROS_PER_SEC = 1000000.0
 LAP_DEDUPLICATION_THRESHOLD = 2  # *60  # 2 minutes
 
@@ -31,18 +30,12 @@ class RelayDB(object):
         if WALKER_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(WALKER_TABLE, durability='soft').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('laps').run(self.conn)
-            yield r.table(WALKER_TABLE).index_create('name').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('team_id').run(self.conn)
-            yield r.table(WALKER_TABLE).index_create('wristband').run(self.conn)
             yield r.table(WALKER_TABLE).index_wait().run(self.conn)
         if TEAM_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(TEAM_TABLE, durability='soft').run(self.conn)
             yield r.table(TEAM_TABLE).index_create('laps').run(self.conn)
             yield r.table(TEAM_TABLE).index_wait().run(self.conn)
-        if INVENTORY_TABLE not in table_names:
-            yield r.db(DB_NAME).table_create(INVENTORY_TABLE, durability='soft').run(self.conn)
-            yield r.table(INVENTORY_TABLE).index_create('reader_id').run(self.conn)
-            yield r.table(INVENTORY_TABLE).index_wait().run(self.conn)
 
 
     @coroutine
@@ -86,30 +79,10 @@ class RelayDB(object):
         raise Return(tags)
 
     @coroutine
-    def insert_walker(self, walker):
-        cur = yield r.table(WALKER_TABLE).get_all(walker['wristband'], index='wristband').run(self.conn)
-        length = 0
-        while (yield cur.fetch_next()):
-            item = yield cur.next()
-            length = length + 1
-        if length > 0:
-            logging.warn('wristband %s already in use %d times' % (walker['wristband'], len(cur)))
-
-        cur = yield r.table(WALKER_TABLE).get_all(walker['name'], index='name').run(self.conn)
-        while (yield cur.fetch_next()):
-            db_walker = yield cur.next()
-            if walker['team_id'] == db_walker['team_id']:  # permit same name across teams
-                logging.warn('name is already assigned to wristband %s', db_walker['wristband'])
-
-        result = yield r.table(WALKER_TABLE).insert(walker).run(self.conn)
+    def insert_walkers(self, walkers):
+        result = yield r.table(WALKER_TABLE).insert(walkers).run(self.conn)
         if result is None or result.get('errors') != 0:
-            logging.error('add_walker %s' % result)
-
-
-    @coroutine
-    def get_tag_id_by_wristband(self, wristband):
-        # TODO
-        raise NotImplementedError
+            logging.error('insert_walkers %s' % result)
 
 
     @coroutine 
@@ -137,23 +110,3 @@ class RelayDB(object):
             'laps': r.row['laps'] + 1
         }).run(self.conn)
 
-
-    @coroutine
-    def add_to_inventory(self, inventory):
-        for t in inventory['tag_ids']:
-            cur = yield r.table(INVENTORY_TABLE).get_all(t).run(self.conn)
-            length = 0
-            while (yield cur.fetch_next()):
-                item = yield cur.next()
-                length += 1
-            if length > 0:
-                logging.warn('tag_id %s already in inventory' % t)
-            else:
-                tag_info = dict(
-                    id=t,
-                    reader_id=inventory['reader_id'],
-                    last_updated_time=time.time()
-                )
-                result = yield r.table(INVENTORY_TABLE).insert(tag_info).run(self.conn)
-                if result is None or result.get('errors') != 0:
-                    logging.error('add_to_inventory %s' % result)
