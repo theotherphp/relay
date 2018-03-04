@@ -78,6 +78,7 @@ class RelayDB(object):
             tags.append(item['id'])
         raise Return(tags)
 
+
     @coroutine
     def insert_walkers(self, walkers):
         result = yield r.table(WALKER_TABLE).insert(walkers).run(self.conn)
@@ -87,26 +88,28 @@ class RelayDB(object):
 
     @coroutine 
     def increment_laps(self, tags):
-        DEDUPLICATION_THRESHOLD = 2.0
-
+        MIN_LAP_TIME = 60.0  # seconds
         now = time.time()
-        # Get the walkers matching these tags
-        cur = yield r.table(WALKER_TABLE).get_all(r.args(tags))\
-            .filter(r.row['last_updated_time'] < now - DEDUPLICATION_THRESHOLD).run(self.conn)
-        id_list = []
-        team_list = []
+
+        tag_set = set(tags)  # remove any duplicate tags
+        cur = yield r.table(WALKER_TABLE).get_all(r.args(list(tag_set))).run(self.conn)
+
         while (yield cur.fetch_next()):
             walker = yield cur.next()
-            id_list.append(walker['id'])
-            team_list.append(walker['team_id'])
-        # Update lap counts for non-duplicate walkers
-        # Duplicates could be multiple reads of the same tag, or someone trying to cheat
-        changes = yield r.table(WALKER_TABLE).get_all(r.args(id_list)).update({
-            'laps': r.row['laps'] + 1,
-            'last_updated_time': now
-        }).run(self.conn)
-        # Update lap counts for walkers' teams
-        yield r.table(TEAM_TABLE).get_all(r.args(team_list)).update({
-            'laps': r.row['laps'] + 1
-        }).run(self.conn)
-
+            tag_set.remove(walker['id'])  # remove the ones we've seen to find unassigned below
+            if now - walker['last_updated_time'] > MIN_LAP_TIME:
+                # Increment lap totals
+                yield r.table(WALKER_TABLE).get(walker['id']).update({
+                    'laps': r.row['laps'] + 1,
+                    'last_updated_time': now
+                }).run(self.conn)
+                yield r.table(TEAM_TABLE).get(walker['team_id']).update({
+                    'laps': r.row['laps'] + 1
+                }).run(self.conn)
+            else:
+                # Not so fast buddy
+                d = dt.fromtimestamp(walker['last_updated_time'])
+                logging.warn('too soon: %d last lap: %s' % (walker['id'], d.strftime('%x %X')))
+        if len(tag_set) > 0:
+            # Shouldn't happen
+            logging.warn('unassigned tags: %s' % str(tag_set))

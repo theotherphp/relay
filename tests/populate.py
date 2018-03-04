@@ -38,7 +38,7 @@ def populate_teams():
 def populate_walkers(teams):
 	walkers = []
 	used_epcs = []
-	for i in range(0, 500):
+	for i in range(0, 200):
 		while True:  # Find a unique EPC since it's the primary key in the DB
 			epc = int(random() * 9999)  # We have four-character strings in the EPC
 			if epc not in used_epcs:
