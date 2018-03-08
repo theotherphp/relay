@@ -2,14 +2,24 @@
 Make up some fake data for teams and walkers so I can test the DB, changefeeds, etc.
 """
 
-from random import random
-from time import sleep
-import requests
-import json
-import websocket
 import argparse
+import json
+import logging
+from random import random
+import requests
+import sys
+sys.path.append('..')
+from time import sleep
 
 from relay_config import cfg
+from relay_websocket import RelayWebsocket
+
+logging.basicConfig(
+    name=__name__,
+    filename='populate.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(module)s %(message)s'
+)
 
 def populate_teams():
 	teams = [
@@ -55,7 +65,7 @@ def populate_walkers(teams):
 
 
 def walk_laps(tags):
-	ws = websocket.create_connection(cfg.websocket_url())
+	ws = RelayWebsocket()
 	while True:
 	    tag = tags[int(random() * len(tags))]
 	    ws.send(str(tag))

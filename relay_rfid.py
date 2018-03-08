@@ -7,10 +7,10 @@ import logging
 from signal import signal, SIGTERM, SIGINT
 import sys
 import time
-import websocket
 
 import mercury
 from tests.relay_config import Config
+from relay_websocket import RelayWebsocket
 
 logging.basicConfig(
     name=__name__,
@@ -33,7 +33,6 @@ def post(epc_obj):
     now = time.time()
     if now - dedup_cache.get(tag, 0.0) > DEDUP_THRESHOLD:
         dedup_cache[tag] = now
-        logging.info('posting tag %s' % int(tag))
         if ws:
             ws.send(tag)
     else:
@@ -43,6 +42,7 @@ def post(epc_obj):
 def sig_handler(sig, frame):
     logging.info('caught signal %d' % sig)
     sys.exit(0)
+
 
 
 if __name__ == '__main__':
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         reader.set_region('NA2')
         reader.set_read_plan([1], 'GEN2')
         reader.start_reading(post, on_time=250, off_time=250)
-        ws = websocket.create_connection(cfg.websocket_url())
+        ws = RelayWebsocket()
     except Exception as e:
         logging.error(str(e))
 
