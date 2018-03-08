@@ -9,8 +9,8 @@ from tests.relay_config import cfg
 DB_NAME = cfg.db_name
 WALKER_TABLE = cfg.walker_table
 TEAM_TABLE = cfg.team_table
+MIN_LAP_TIME = cfg.min_lap_time
 MICROS_PER_SEC = 1000000.0
-LAP_DEDUPLICATION_THRESHOLD = 2  # *60  # 2 minutes
 
 class RelayDB(object):
 
@@ -88,15 +88,11 @@ class RelayDB(object):
 
     @coroutine 
     def increment_laps(self, tags):
-        MIN_LAP_TIME = 60.0  # seconds
-        now = time.time()
-
-        tag_set = set(tags)  # remove any duplicate tags
-        cur = yield r.table(WALKER_TABLE).get_all(r.args(list(tag_set))).run(self.conn)
-
+        cur = yield r.table(WALKER_TABLE).get_all(r.args(tags)).run(self.conn)
         while (yield cur.fetch_next()):
             walker = yield cur.next()
-            tag_set.remove(walker['id'])  # remove the ones we've seen to find unassigned below
+            tags.remove(walker['id'])  # remove the ones we've seen to find unassigned below
+            now = time.time()
             if now - walker['last_updated_time'] > MIN_LAP_TIME:
                 # Increment lap totals
                 yield r.table(WALKER_TABLE).get(walker['id']).update({
@@ -110,6 +106,6 @@ class RelayDB(object):
                 # Not so fast buddy
                 d = dt.fromtimestamp(walker['last_updated_time'])
                 logging.warn('too soon: %d last lap: %s' % (walker['id'], d.strftime('%x %X')))
-        if len(tag_set) > 0:
+        if len(tags) > 0:
             # Shouldn't happen
-            logging.warn('unassigned tags: %s' % str(tag_set))
+            logging.warn('unassigned tags: %s' % ','.join(tags))

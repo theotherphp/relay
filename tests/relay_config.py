@@ -40,5 +40,8 @@ class Config(object):
     def rest_url(self, api):
         return 'http://' + self.app_host + ':' + self.app_port + api
 
-
+    @property
+    def min_lap_time(self):
+        return 60.0  # seconds
+    
 cfg = Config()
