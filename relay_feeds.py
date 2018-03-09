@@ -65,7 +65,7 @@ def notice_team_changes(db):
 
 @coroutine
 def notice_walker_changes(db):
-    feed = yield r.table(cfg.walker_table).changes().run(db.conn)
+    feed = yield r.table(cfg.walker_table).with_fields('id', 'team_id', 'laps').changes().run(db.conn)
     while (yield feed.fetch_next()):
         change = yield feed.next()
         if change['new_val']['laps'] > 0:
