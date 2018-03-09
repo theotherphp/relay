@@ -33,6 +33,7 @@ class RelayDB(object):
             yield r.table(WALKER_TABLE).index_wait().run(self.conn)
         if TEAM_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(TEAM_TABLE, durability='soft').run(self.conn)
+            yield r.table(TEAM_TABLE).index_create('laps').run(self.conn)
             yield r.table(TEAM_TABLE).index_wait().run(self.conn)
 
 
