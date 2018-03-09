@@ -89,6 +89,8 @@ class RelayDB(object):
     @coroutine 
     def increment_laps(self, tags):
         cur = yield r.table(WALKER_TABLE).get_all(r.args(tags)).run(self.conn)
+        if len(tags) > 1:
+            logging.debug('updating %d records' % len(tags))
         while (yield cur.fetch_next()):
             walker = yield cur.next()
             tags.remove(walker['id'])  # remove the ones we've seen to find unassigned below

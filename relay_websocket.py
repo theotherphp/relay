@@ -25,7 +25,9 @@ class RelayWebsocket(object):
                 logging.error('_connect: %s' % str(e))
         if self.good:
             tags = ','.join(self.tag_buffer)
-            logging.info('sending: %s' % tags)
+            num_tags = len(self.tag_buffer)
+            if num_tags > 1:
+                logging.debug('sending %d tags' % num_tags)
             try:
                 self.ws.send(tags)
                 self.tag_buffer = []
