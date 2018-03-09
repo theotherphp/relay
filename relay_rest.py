@@ -42,6 +42,7 @@ class RegisterHandler(RelayHandler):
         for walker in walkers:
             walker['laps'] = 0
             walker['last_updated_time'] = 0.0
+            walker['lap_times'] = []
         self.db.insert_walkers(walkers)
 
 

@@ -29,12 +29,10 @@ class RelayDB(object):
         table_names = yield r.table_list().run(self.conn)
         if WALKER_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(WALKER_TABLE, durability='soft').run(self.conn)
-            yield r.table(WALKER_TABLE).index_create('laps').run(self.conn)
             yield r.table(WALKER_TABLE).index_create('team_id').run(self.conn)
             yield r.table(WALKER_TABLE).index_wait().run(self.conn)
         if TEAM_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(TEAM_TABLE, durability='soft').run(self.conn)
-            yield r.table(TEAM_TABLE).index_create('laps').run(self.conn)
             yield r.table(TEAM_TABLE).index_wait().run(self.conn)
 
 
@@ -44,7 +42,7 @@ class RelayDB(object):
         for table in [WALKER_TABLE, TEAM_TABLE]:
             result = yield r.table(table).sync().run(self.conn)
             if result is None or result.get('synced') != 1:
-                log.error('sync %s failed' % table)
+                log.error('sync %s' % table)
         self.conn.close()
         delta = dt.now() - then
         duration = delta.seconds + (delta.microseconds/MICROS_PER_SEC)
@@ -99,6 +97,7 @@ class RelayDB(object):
                 # Increment lap totals
                 yield r.table(WALKER_TABLE).get(walker['id']).update({
                     'laps': r.row['laps'] + 1,
+                    'lap_times': r.row['lap_times'].append(now),
                     'last_updated_time': now
                 }).run(self.conn)
                 yield r.table(TEAM_TABLE).get(walker['team_id']).update({
