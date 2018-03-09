@@ -39,9 +39,13 @@ def run_app():
     handler_args = dict(db=db)
     app_settings = {
         'static_path': os.path.join(os.path.dirname(__file__), 'static'),
+        'viewer_path': os.path.join(os.path.dirname(__file__), 'static', 'Lap-Counter-Viewer'),
         'debug': True
     }
     app = Application([
+        (r'/(index\.html)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
+        (r'/(css/index\.css)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
+        (r'/(js/(.*)\.js)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
         (r'/', MainHandler, handler_args),
         (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),        
         (r'/register', RegisterHandler, handler_args),
