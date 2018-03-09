@@ -9,7 +9,7 @@ import sys
 import time
 
 import mercury
-from tests.relay_config import Config
+from relay_config import Config
 from relay_websocket import RelayWebsocket
 
 logging.basicConfig(

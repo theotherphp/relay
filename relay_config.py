@@ -2,9 +2,6 @@
 Configure global stuff like hostname and port
 """
 
-import platform
-
-
 class Config(object):
     @property
     def app_host(self):

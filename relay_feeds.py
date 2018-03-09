@@ -9,7 +9,7 @@ import rethinkdb as r
 from tornado.ioloop import IOLoop
 import json
 
-from tests.relay_config import cfg
+from relay_config import cfg
 
 """
 Base class for Websockets bookkeeping

@@ -5,7 +5,7 @@ Websocket wrapper, adding buffering and reconnect semantics
 import websocket
 import logging
 
-from tests.relay_config import cfg
+from relay_config import cfg
 
 class RelayWebsocket(object):
 

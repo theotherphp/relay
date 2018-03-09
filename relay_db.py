@@ -4,7 +4,7 @@ from datetime import datetime as dt
 import time
 from tornado.gen import coroutine, Return
 
-from tests.relay_config import cfg
+from relay_config import cfg
 
 DB_NAME = cfg.db_name
 WALKER_TABLE = cfg.walker_table

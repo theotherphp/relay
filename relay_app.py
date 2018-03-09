@@ -16,7 +16,7 @@ from relay_rest import MainHandler, \
     TagsHandler, TeamsHandler
 from relay_feeds import LeaderboardWSHandler, notice_team_changes, notice_walker_changes
 
-from tests.relay_config import Config
+from relay_config import cfg
 
 import logging
 logging.basicConfig(
@@ -55,7 +55,6 @@ def run_app():
         (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
         (r'/(register\.js)', StaticFileHandler, dict(path=app_settings['static_path'])),
     ], autoreload=True, **app_settings)
-    cfg = Config()
     server = HTTPServer(app)
     server.listen(cfg.app_port)
     signal(SIGTERM, partial(sig_handler, server))
