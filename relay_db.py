@@ -98,7 +98,7 @@ class RelayDB(object):
                 # Increment lap totals
                 yield r.table(WALKER_TABLE).get(walker['id']).update({
                     'laps': r.row['laps'] + 1,
-                    'lap_times': r.row['lap_times'].append(now),
+                    'lap_times': r.row['lap_times'].prepend(now),
                     'last_updated_time': now
                 }).run(self.conn)
                 yield r.table(TEAM_TABLE).get(walker['team_id']).update({
