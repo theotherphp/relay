@@ -61,11 +61,12 @@ def notice_team_changes(db):
         change = yield feed.next()
         if change['new_val']['laps'] > 0:
             for client in LeaderboardWSHandler.clients:
+                logging.debug('change: %s' % str(change))
                 client.write_message({'type': 'leaderboard', 'data': change})
 
 @coroutine
 def notice_walker_changes(db):
-    feed = yield r.table(cfg.walker_table).with_fields('id', 'team_id', 'laps').changes().run(db.conn)
+    feed = yield r.table(cfg.walker_table).without('lap_times').changes().run(db.conn)
     while (yield feed.fetch_next()):
         change = yield feed.next()
         if change['new_val']['laps'] > 0:
