@@ -36,11 +36,6 @@ Consumed by Spencer's Lap-Counter-Viewer JS app
 class LeaderboardWSHandler(RelayWSHandler):
 
     @coroutine
-    def on_message(self, message):
-        tags = [int(t) for t in message.split(',')]
-        self.db.increment_laps(tags)
-
-    @coroutine
     def open(self):
         super(LeaderboardWSHandler, self).open()
         IOLoop.current().add_callback(self.notice_team_changes)
@@ -70,3 +65,11 @@ class LeaderboardWSHandler(RelayWSHandler):
                 else:
                     logging.debug('notice_walker_changes returning')
                     return
+
+class LapsWSHandler(RelayWSHandler):
+    
+    @coroutine
+    def on_message(self, message):
+        tags = [int(t) for t in message.split(',')]
+        self.db.increment_laps(tags)
+

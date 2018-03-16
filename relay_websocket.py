@@ -18,7 +18,7 @@ class RelayWebsocket(object):
         if not self.good:
             try:
                 logging.debug('connecting')
-                self.ws = websocket.create_connection(cfg.websocket_url())
+                self.ws = websocket.create_connection(cfg.laps_ws_url)
                 self.ws.on_close = self.on_close
                 self.good = True
             except Exception as e:

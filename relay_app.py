@@ -14,7 +14,7 @@ from relay_db import RelayDB
 from relay_rest import MainHandler, \
     RegisterHandler, RegisterSuccessHandler, \
     TagsHandler, TeamsHandler
-from relay_feeds import LeaderboardWSHandler
+from relay_feeds import LeaderboardWSHandler, LapsWSHandler
 
 from relay_config import cfg
 
@@ -48,6 +48,7 @@ def run_app():
         (r'/(js/(.*)\.js)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
         (r'/', MainHandler, handler_args),
         (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),        
+        (r'/laps_ws', LapsWSHandler, handler_args),        
         (r'/register', RegisterHandler, handler_args),
         (r'/register_success', RegisterSuccessHandler, handler_args),
         (r'/tags', TagsHandler, handler_args),

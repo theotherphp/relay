@@ -31,11 +31,16 @@ class Config(object):
     def team_table(self):
         return 'teams'
 
-    def websocket_url(self):
-        return 'ws://' + self.app_host + ':' + self.app_port + '/leaderboard_ws'
-
     def rest_url(self, api):
         return 'http://' + self.app_host + ':' + self.app_port + api
+
+    @property
+    def laps_ws_api(self):
+        return '/laps_ws'
+
+    @property
+    def laps_ws_url(self):
+        return 'ws://' + self.app_host + ':' + self.app_port + self.laps_ws_api
 
     @property
     def min_lap_time(self):
