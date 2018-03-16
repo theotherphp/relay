@@ -14,7 +14,7 @@ from relay_db import RelayDB
 from relay_rest import MainHandler, \
     RegisterHandler, RegisterSuccessHandler, \
     TagsHandler, TeamsHandler
-from relay_feeds import LeaderboardWSHandler, notice_team_changes, notice_walker_changes
+from relay_feeds import LeaderboardWSHandler
 
 from relay_config import cfg
 
@@ -59,10 +59,8 @@ def run_app():
     server.listen(cfg.app_port)
     signal(SIGTERM, partial(sig_handler, server))
     signal(SIGINT, partial(sig_handler, server))
-    IOLoop.current().add_callback(notice_team_changes, **handler_args)
-    IOLoop.current().add_callback(notice_walker_changes, **handler_args)
-    IOLoop.instance().start()
-    IOLoop.instance().run_sync(db.close)  # Close the DB cleanly to avoid corruption
+    IOLoop.current().start()
+    IOLoop.current().run_sync(db.close)  # Close the DB cleanly to avoid corruption
 
 
 if __name__ == '__main__':

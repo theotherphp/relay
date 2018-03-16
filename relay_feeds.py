@@ -16,25 +16,17 @@ Base class for Websockets bookkeeping
 """
 class RelayWSHandler(WebSocketHandler):
     def initialize(self, db):
+        self.alive = True
         self.db = db
-        # per-instance access to global/static member data
-        self.clients = self.get_clients()  
 
     @coroutine
     def open(self):
         self.stream.set_nodelay(True)
-        if self not in self.clients:
-            self.clients.append(self)
 
     @coroutine
     def on_close(self):
-        for i, client in enumerate(self.clients):
-            if client is self:
-                del self.clients[i]
-                return
-
-    def check_origin(self, origin):
-        return True  # Unrestricted access for now
+        logging.debug('on_close')
+        self.alive = False
 
 
 """
@@ -42,33 +34,39 @@ Supports dynamic lap counts for walkers and teams.
 Consumed by Spencer's Lap-Counter-Viewer JS app
 """
 class LeaderboardWSHandler(RelayWSHandler):
-    clients = []
-
-    def get_clients(self):
-        return LeaderboardWSHandler.clients
 
     @coroutine
     def on_message(self, message):
         tags = [int(t) for t in message.split(',')]
         self.db.increment_laps(tags)
 
+    @coroutine
+    def open(self):
+        super(LeaderboardWSHandler, self).open()
+        IOLoop.current().add_callback(self.notice_team_changes)
+        IOLoop.current().add_callback(self.notice_walker_changes)
 
-@coroutine
-def notice_team_changes(db):
-    feed = yield r.table(cfg.team_table).order_by(index=r.desc('laps'))\
-        .limit(15).changes().run(db.conn)
-    while (yield feed.fetch_next()):
-        change = yield feed.next()
-        if change['new_val']['laps'] > 0:
-            for client in LeaderboardWSHandler.clients:
-                logging.debug('change: %s' % str(change))
-                client.write_message({'type': 'leaderboard', 'data': change})
+    @coroutine
+    def notice_team_changes(self):
+        feed = yield r.table(cfg.team_table).order_by(index=r.desc('laps'))\
+            .limit(15).changes(include_initial=True).run(self.db.conn)
+        while (yield feed.fetch_next()):
+            change = yield feed.next()
+            if self.alive:
+                self.write_message({'type': 'leaderboard', 'data': change})
+            else:
+                logging.debug('notice_team_changes returning')
+                return
 
-@coroutine
-def notice_walker_changes(db):
-    feed = yield r.table(cfg.walker_table).without('lap_times').changes().run(db.conn)
-    while (yield feed.fetch_next()):
-        change = yield feed.next()
-        if change['new_val']['laps'] > 0:
-            for client in LeaderboardWSHandler.clients:
-                client.write_message({'type': 'ticker', 'data': change})
+    @coroutine
+    def notice_walker_changes(self):
+        feed = yield r.table(cfg.walker_table).without('lap_times')\
+            .changes(include_initial=True).run(self.db.conn)
+        while (yield feed.fetch_next()):
+            change = yield feed.next()
+            if change['new_val']['laps'] > 0:
+                if self.alive:
+                    self.write_message({'type': 'ticker', 'data': change})
+                else:
+                    logging.debug('notice_walker_changes returning')
+                    return
