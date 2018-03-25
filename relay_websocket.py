@@ -37,7 +37,8 @@ class RelayWebsocket(object):
 
     def close(self):
         logging.debug('close')
-        self.ws.close()
+        if self.good:
+            self.ws.close()
         self.good = False
 
     def on_close(self):

@@ -110,4 +110,4 @@ class RelayDB(object):
                 logging.warn('too soon: %d last lap: %s' % (walker['id'], d.strftime('%x %X')))
         if len(tags) > 0:
             # Shouldn't happen
-            logging.warn('unassigned tags: %s' % ','.join(tags))
+            logging.warn('unassigned tags: %s' % tags)
