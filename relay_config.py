@@ -5,7 +5,7 @@ Configure global stuff like hostname and port
 class Config(object):
     @property
     def app_host(self):
-        return 'localhost'
+        return 'relay.local'
 
     @property
     def app_port(self):
@@ -44,6 +44,6 @@ class Config(object):
 
     @property
     def min_lap_time(self):
-        return 60.0  # seconds
+        return 6.0  # seconds
     
 cfg = Config()
