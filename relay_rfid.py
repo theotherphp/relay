@@ -14,7 +14,7 @@ from relay_websocket import RelayWebsocket
 
 logging.basicConfig(
     name=__name__,
-    filename='relay_rfid.log',
+    filename='rfid.log',
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s'
 )
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     try:
         reader = mercury.Reader('tmr:///dev/ttyUSB0')
         reader.set_region('NA2')
-        reader.set_read_plan([1], 'GEN2', read_power=2000)
+        reader.set_read_plan([1], 'GEN2', read_power=2600)
         reader.start_reading(post, on_time=250, off_time=250)
         ws = RelayWebsocket()
     except Exception as e:
