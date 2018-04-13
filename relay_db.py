@@ -54,7 +54,7 @@ class RelayDB(object):
     def insert_teams(self, teams):
         for i in range(0, len(teams)):
             teams[i]['laps'] = 0
-            teams[i]['id'] = i  # generated keys are so ugly
+            teams[i]['id'] = yield self.get_next_team_id()
         result = yield r.table(TEAM_TABLE).insert(teams).run(self.conn)
         if result is None or result.get('errors') != 0:
             logging.error('insert_teams %s ' % result)
@@ -68,6 +68,15 @@ class RelayDB(object):
             team = yield cur.next()
             teams.append(team)
         raise Return(teams)
+
+
+    @coroutine
+    def get_next_team_id(self):
+        team_with_max_id = yield r.table(TEAM_TABLE).max('id').run(self.conn)
+        if team_with_max_id:
+            raise Return(team_with_max_id['id'] + 1)
+        else:
+            raise Return(0)
 
 
     @coroutine

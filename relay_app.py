@@ -55,8 +55,8 @@ def run_app():
         (r'/(side-menu\.css)', StaticFileHandler, dict(path=app_settings['pure_path'])),
         (r'/(ui\.js)', StaticFileHandler, dict(path=app_settings['pure_path'])),
         (r'/teams/', TeamsHandler, handler_args),
-        (r'/team/([0-9]+)', TeamHandler, handler_args),
-        (r'/walker/([0-9]+)', WalkerHandler, handler_args)
+        (r'/team/(.*)', TeamHandler, handler_args),
+        (r'/walker/(.*)', WalkerHandler, handler_args)
     ], autoreload=True, **app_settings)
     server = HTTPServer(app)
     server.listen(cfg.app_port)

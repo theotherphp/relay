@@ -26,9 +26,10 @@
                         </tr>
                     {% end %}
                 </table>
-                <form class="pure-form">
+                <form action="/walker/" method="post" class="pure-form">
                     <fieldset>
-                        <input type="" placeholder="100-102, or 100,101">
+                        <input type="text" name="tags" placeholder="100-102, or 100,101">
+                        <input type="hidden" name="team_id" value="{{selected_team['id']}}">
                         <button type="submit" class="pure-button pure-button-primary">Add tags</button>
                     </fieldset>
                 </form>            

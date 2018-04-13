@@ -56,8 +56,27 @@ class WalkerHandler(RelayHandler):
         )
 
     @coroutine
-    def put(self):
-        raise NotImplemented
+    def post(self, _):
+        tag_param = self.get_body_argument('tags', '')
+        team_param = self.get_body_argument('team_id', '')
+        if tag_param and team_param:
+            team_id = int(team_param)
+            ids = []
+            if '-' in tag_param:
+                l = [int(t) for t in tag_param.split('-')]
+                ids = range(min(l), max(l) + 1)
+            elif ',' in tag_param:
+                ids = [int(t) for t in tag_param.split(',')]
+            else:
+                ids = [int(tag_param)]
+            walkers = []
+            for i in ids:
+                walkers.append(dict(id=i, team_id=team_id))
+            self.db.insert_walkers(walkers)
+            self.redirect('/team/%d' % team_id)
+        else: 
+            self.set_status(400)
+            self.finish()
 
 
 # Add tags/walkers to the DB, or get registered tags
@@ -93,8 +112,11 @@ class TeamHandler(RelayHandler):
         )
 
     @coroutine
-    def put(self, team_name):
-        raise NotImplemented
+    def post(self, _):
+        team_name = self.get_body_argument('team_name', default='')
+        if team_name:
+            self.db.insert_teams([{'name':team_name}])
+            self.redirect('/teams/')
 
 
 # Add multiple teams, or display all teams' statistics
@@ -108,7 +130,7 @@ class TeamsHandler(RelayHandler):
             title='Teams',
             teams=teams,
             teams_by_laps=teams_by_laps,
-            selected_team = None
+            selected_team=None
         )
 
     @coroutine
