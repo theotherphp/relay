@@ -1,0 +1,38 @@
+{% extends "base-pure.html" %}
+
+{% block body %}
+    <div id="layout">
+
+        {% include side-menu.html %}
+
+        <div id="main">
+            <div class="header">
+                <h3>Tag {{ walker['id'] }}</h3>
+            </div>
+            <div class="content">
+                <table class="pure-table">
+                    <thead>
+                        <tr>
+                            <td>Tag ID</td>
+                            <td>Lap Count</td>
+                            <td>Lap Times</td>
+                        </tr>
+                    </thead>
+                    <tr>
+                        <td>{{ walker['id'] }}</td>
+                        <td>{{ walker['laps'] }}</td>
+                        <td>{{ friendly_date(walker['last_updated_time']) }}</td>
+                    </tr>
+                    {% for lt in walker['lap_times'] %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>{{ friendly_date(lt) }}</td>
+                        </tr>
+                    {% end %}
+                </table>
+            </div>
+        </div>
+
+    </div>
+{% end %}

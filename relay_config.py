@@ -34,13 +34,8 @@ class Config(object):
     def rest_url(self, api):
         return 'http://' + self.app_host + ':' + self.app_port + api
 
-    @property
-    def laps_ws_api(self):
-        return '/laps_ws'
-
-    @property
-    def laps_ws_url(self):
-        return 'ws://' + self.app_host + ':' + self.app_port + self.laps_ws_api
+    def ws_url(self, api):
+        return 'ws://' + self.app_host + ':' + self.app_port + api
 
     @property
     def min_lap_time(self):

@@ -60,7 +60,7 @@ def populate_walkers(teams):
 			'id': epc,
 			'team_id': team_id,
 		})
-	requests.post(cfg.rest_url('/register'), json=walkers)
+	requests.post(cfg.rest_url('/tags'), json=walkers)
 	return [w['id'] for w in walkers] 
 
 

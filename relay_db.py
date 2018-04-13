@@ -52,7 +52,9 @@ class RelayDB(object):
  
     @coroutine
     def insert_teams(self, teams):
-        generated_keys = []
+        for i in range(0, len(teams)):
+            teams[i]['laps'] = 0
+            teams[i]['id'] = i  # generated keys are so ugly
         result = yield r.table(TEAM_TABLE).insert(teams).run(self.conn)
         if result is None or result.get('errors') != 0:
             logging.error('insert_teams %s ' % result)
@@ -69,6 +71,22 @@ class RelayDB(object):
 
 
     @coroutine
+    def get_walker(self, walker_id):
+        walker = yield r.table(WALKER_TABLE).get(walker_id).run(self.conn)
+        raise Return(walker)
+
+
+    @coroutine
+    def get_walkers(self, team_id):
+        walkers = []
+        cur = yield r.table(WALKER_TABLE).get_all(team_id, index='team_id').run(self.conn)
+        while (yield cur.fetch_next()):
+            walker = yield cur.next()
+            walkers.append(walker)
+        raise Return(walkers)
+
+
+    @coroutine
     def get_tags(self):
         tags = []
         cur = yield r.table(WALKER_TABLE).with_fields('id').run(self.conn)
@@ -80,6 +98,10 @@ class RelayDB(object):
 
     @coroutine
     def insert_walkers(self, walkers):
+        for walker in walkers:
+            walker['laps'] = 0
+            walker['last_updated_time'] = 0.0
+            walker['lap_times'] = []
         result = yield r.table(WALKER_TABLE).insert(walkers).run(self.conn)
         if result is None or result.get('errors') != 0:
             logging.error('insert_walkers %s' % result)

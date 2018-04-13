@@ -2,11 +2,18 @@
 RESTful API handlers for Relay web pages
 """
 
-from tornado.web import RequestHandler
-from tornado.gen import coroutine
-from urlparse import parse_qsl
 import json
 import logging
+from tornado.gen import coroutine, Return
+from tornado.web import RequestHandler
+from datetime import datetime
+
+
+def friendly_date(ts):
+    if ts == 0:
+        return ''
+    else:
+        return datetime.fromtimestamp(ts).strftime('%x %X')
 
 
 # Base class for all our RequestHandlers to have access to the DB
@@ -14,46 +21,46 @@ class RelayHandler(RequestHandler):
     def initialize(self, db):
         self.db = db
 
+    @coroutine
+    def get_teams_by(self, sort_key, reverse=False):
+        teams = yield self.db.get_teams()
+        raise Return(sorted(teams, key=lambda t: t[sort_key], reverse=reverse))
+
+    def get_selected_team(self, teams, team_id):
+        selected_team = {}
+        for team in teams:
+            if team['id'] == team_id:
+                selected_team = team
+        return selected_team
+
 
 class MainHandler(RelayHandler):
     def get(self):
         self.write('Hello, Relay World')
 
 
-class RegisterHandler(RelayHandler):
-    # Provide the registration page for one walker
+# Display a walker's statistics
+class WalkerHandler(RelayHandler):
     @coroutine
-    def get(self):
-        teams = yield self.db.get_teams()
-        # self.render(
-        #     'static/register.html',
-        #     title='Register for Relay',
-        #     teams=teams
-        # )
+    def get(self, tag_id_str):
+        tag_id = int(tag_id_str)
+        walker = yield self.db.get_walker(tag_id)
+        teams = yield self.get_teams_by('name')
         self.render(
-            'static/register_ws.html',
-            # title='Register for Relay',
-            # teams=teams
+            'static/walker.html',
+            title='Walker',
+            teams=teams,
+            walker=walker,
+            selected_team=self.get_selected_team(teams, walker['team_id']),
+            friendly_date=friendly_date
         )
 
-    # Add walker(s) to the DB so we can count their laps
-    def post(self):
-        walkers = json.loads(self.request.body)
-        for walker in walkers:
-            walker['laps'] = 0
-            walker['last_updated_time'] = 0.0
-            walker['lap_times'] = []
-        self.db.insert_walkers(walkers)
+    @coroutine
+    def put(self):
+        raise NotImplemented
 
 
-class RegisterSuccessHandler(RelayHandler):
-    def get(self):
-        self.render(
-            'static/register_success.html',
-            title='Success'
-        )
-
-
+# Add tags/walkers to the DB, or get registered tags
 class TagsHandler(RelayHandler):
     @coroutine
     def get(self):
@@ -62,25 +69,50 @@ class TagsHandler(RelayHandler):
         self.write(json.dumps(tags))
         self.finish()
 
+    @coroutine
     def post(self):
-        # Maybe this is how to do inventory of tags on hand?
-        raise NotImplementedError
+        walkers = json.loads(self.request.body)
+        self.db.insert_walkers(walkers)
 
 
-class TeamsHandler(RelayHandler):
-    def get(self):
+# Add one team, or display one team's statistics
+class TeamHandler(RelayHandler):
+    @coroutine
+    def get(self, team_id_str):
+        team_id = int(team_id_str)
+        walkers = yield self.db.get_walkers(team_id)
+        teams = yield self.get_teams_by('name')
+
         self.render(
-            'static/teams.html',
-            title='Import Teams'
+            'static/team.html',
+            title='Team',
+            teams=teams,
+            selected_team=self.get_selected_team(teams, team_id),
+            walkers=sorted(walkers, key=lambda w: w['id']),
+            friendly_date=friendly_date
         )
 
+    @coroutine
+    def put(self, team_name):
+        raise NotImplemented
+
+
+# Add multiple teams, or display all teams' statistics
+class TeamsHandler(RelayHandler):
+    @coroutine
+    def get(self):
+        teams = yield self.get_teams_by('name')
+        teams_by_laps = yield self.get_teams_by('laps', True)
+        self.render(
+            'static/teams.html',
+            title='Teams',
+            teams=teams,
+            teams_by_laps=teams_by_laps,
+            selected_team = None
+        )
+
+    @coroutine
     def post(self):
         teams = json.loads(self.request.body)
-        self._init_teams(teams)
         self.db.insert_teams(teams)
         self.finish()
-
-    def _init_teams(self, teams):
-        for i in range(0, len(teams)):
-            teams[i]['laps'] = 0
-            teams[i]['id'] = i  # generated keys are so ugly

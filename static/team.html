@@ -7,27 +7,29 @@
 
         <div id="main">
             <div class="header">
-                <h3>Teams by Lap Count</h3>
+                <h3>{{ selected_team['name'] }} - {{ selected_team['laps'] }} laps</h3>
             </div>
             <div class="content">
                 <table class="pure-table">
                     <thead>
                         <tr>
-                            <td>Team Name</td>
+                            <td>Tag ID</td>
                             <td>Lap Count</td>
+                            <td>Last Lap Time</td>
                         </tr>
                     </thead>
-                    {% for team in teams_by_laps %}
+                    {% for walker in walkers %}
                         <tr>
-                            <td><a href="/team/{{team['id']}}">{{ team['name'] }}</a></td>
-                            <td>{{ team['laps'] }}</td>
+                            <td><a href="/walker/{{walker['id']}}">{{ walker['id'] }}</a></td>
+                            <td>{{ walker['laps'] }}</td>
+                            <td>{{ friendly_date(walker['last_updated_time']) }}</td>
                         </tr>
                     {% end %}
                 </table>
                 <form class="pure-form">
                     <fieldset>
-                        <input type="" placeholder="team name">
-                        <button type="submit" class="pure-button pure-button-primary">Add team</button>
+                        <input type="" placeholder="100-102, or 100,101">
+                        <button type="submit" class="pure-button pure-button-primary">Add tags</button>
                     </fieldset>
                 </form>            
             </div>

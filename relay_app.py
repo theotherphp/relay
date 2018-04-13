@@ -11,9 +11,7 @@ from tornado.web import Application, StaticFileHandler
 from tornado.httpserver import HTTPServer
 
 from relay_db import RelayDB
-from relay_rest import MainHandler, \
-    RegisterHandler, RegisterSuccessHandler, \
-    TagsHandler, TeamsHandler
+from relay_rest import MainHandler, TagsHandler, TeamHandler, TeamsHandler, WalkerHandler
 from relay_feeds import LeaderboardWSHandler, LapsWSHandler
 
 from relay_config import cfg
@@ -39,6 +37,7 @@ def run_app():
     handler_args = dict(db=db)
     app_settings = {
         'static_path': os.path.join(os.path.dirname(__file__), 'static'),
+        'pure_path': os.path.join(os.path.dirname(__file__), 'static', 'pure'),
         'viewer_path': os.path.join(os.path.dirname(__file__), 'static', 'Lap-Counter-Viewer'),
         'debug': True
     }
@@ -49,12 +48,13 @@ def run_app():
         (r'/', MainHandler, handler_args),
         (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),        
         (r'/laps_ws', LapsWSHandler, handler_args),        
-        (r'/register', RegisterHandler, handler_args),
-        (r'/register_success', RegisterSuccessHandler, handler_args),
         (r'/tags', TagsHandler, handler_args),
-        (r'/teams', TeamsHandler, handler_args),
         (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
-        (r'/(register\.js)', StaticFileHandler, dict(path=app_settings['static_path'])),
+        (r'/(side-menu\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
+        (r'/(ui\.js)', StaticFileHandler, dict(path=app_settings['pure_path'])),
+        (r'/teams/', TeamsHandler, handler_args),
+        (r'/team/([0-9]+)', TeamHandler, handler_args),
+        (r'/walker/([0-9]+)', WalkerHandler, handler_args)
     ], autoreload=True, **app_settings)
     server = HTTPServer(app)
     server.listen(cfg.app_port)
