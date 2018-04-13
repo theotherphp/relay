@@ -42,6 +42,7 @@ def run_app():
         'debug': True
     }
     app = Application([
+        # Leaderboard support
         (r'/(index\.html)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
         (r'/(css/index\.css)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
         (r'/(js/(.*)\.js)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
@@ -49,8 +50,9 @@ def run_app():
         (r'/leaderboard_ws', LeaderboardWSHandler, handler_args),        
         (r'/laps_ws', LapsWSHandler, handler_args),        
         (r'/tags', TagsHandler, handler_args),
-        (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
-        (r'/(side-menu\.css)', StaticFileHandler, dict(path=app_settings['static_path'])),
+        # Admin web pages using https://purecss.io
+        (r'/(pure-min\.css)', StaticFileHandler, dict(path=app_settings['pure_path'])),
+        (r'/(side-menu\.css)', StaticFileHandler, dict(path=app_settings['pure_path'])),
         (r'/(ui\.js)', StaticFileHandler, dict(path=app_settings['pure_path'])),
         (r'/teams/', TeamsHandler, handler_args),
         (r'/team/([0-9]+)', TeamHandler, handler_args),
