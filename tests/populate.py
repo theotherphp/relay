@@ -3,6 +3,7 @@ Make up some fake data for teams and walkers so I can test the DB, changefeeds, 
 """
 
 import argparse
+import csv
 import json
 import logging
 from random import random
@@ -21,27 +22,20 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(module)s %(message)s'
 )
 
-def populate_teams():
-	teams = [
-	    {'name': '49ers'},
-	    {'name': 'Raiders'},
-	    {'name': 'Warriors'},
-	    {'name': 'Eagles'},
-	    {'name': 'Sixers'},
-	    {'name': 'Patriots'},
-	    {'name': 'Yankees'},
-	    {'name': 'Red Sox'},
-	    {'name': 'Sharks'},
-	    {'name': 'Giants'},
-	    {'name': 'Vikings'},
-	    {'name': 'Seahawks'},
-	    {'name': 'Rams'},
-	    {'name': 'Love Your Butt'},
-	    {'name': 'Event Staff'}
-	]
-	for i in range(0, len(teams)):
-		teams[i]['id'] = i  # I guess better than a big ugly GUID
-	resp = requests.post(cfg.rest_url('/teams'), json=teams)
+
+def teams_from_csv(fname):
+	teams = []
+	count = 0
+	with open(fname, 'rb') as csvfile:
+		reader = csv.DictReader(csvfile)
+		for d in reader:
+			if 'dollars' in d:
+				del d['dollars']
+			if 'members' in d:
+				d['members'] = int(d['members'])
+			d['id'] = count
+			count += 1
+			teams.append(d)
 	return teams
 
 
@@ -74,12 +68,13 @@ def walk_laps(tags):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Make up some fake data for testing')
-	parser.add_argument('--from-scratch', action='store_true', default=False, \
-		help='Generate teams and walkers into an empty DB. Otherwise use existing DB')
+	parser.add_argument('--csv-file', default='', \
+		help='Pathname to CSV file')
 	ns = parser.parse_args()
 
-	if ns.from_scratch:
-		teams = populate_teams()
+	if ns.csv_file:
+		teams = teams_from_csv(ns.csv_file)
+		resp = requests.post(cfg.rest_url('/teams/'), json=teams)
 		tags = populate_walkers(teams)
 	else:
 		resp = requests.get(cfg.rest_url('/tags'))

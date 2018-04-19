@@ -34,6 +34,7 @@ class RelayDB(object):
         if TEAM_TABLE not in table_names:
             yield r.db(DB_NAME).table_create(TEAM_TABLE, durability='soft').run(self.conn)
             yield r.table(TEAM_TABLE).index_create('laps').run(self.conn)
+            yield r.table(TEAM_TABLE).index_create('avg_laps').run(self.conn)
             yield r.table(TEAM_TABLE).index_wait().run(self.conn)
 
 
@@ -52,9 +53,11 @@ class RelayDB(object):
  
     @coroutine
     def insert_teams(self, teams):
-        for i in range(0, len(teams)):
-            teams[i]['laps'] = 0
-            teams[i]['id'] = yield self.get_next_team_id()
+        for team in teams:
+            team['laps'] = 0
+            team['avg_laps'] = 0.0
+            if 'id' not in team:
+                team['id'] = yield self.get_next_team_id()
         result = yield r.table(TEAM_TABLE).insert(teams).run(self.conn)
         if result is None or result.get('errors') != 0:
             logging.error('insert_teams %s ' % result)
@@ -132,8 +135,10 @@ class RelayDB(object):
                     'lap_times': r.row['lap_times'].prepend(now),
                     'last_updated_time': now
                 }).run(self.conn)
+                avg_laps = yield r.table(WALKER_TABLE).get_all(walker['team_id'], index='team_id').avg('laps').run(self.conn)
                 yield r.table(TEAM_TABLE).get(walker['team_id']).update({
-                    'laps': r.row['laps'] + 1
+                    'laps': r.row['laps'] + 1,
+                    'avg_laps': avg_laps
                 }).run(self.conn)
             else:
                 # Not so fast buddy
