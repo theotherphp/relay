@@ -7,7 +7,10 @@
 
         <div id="main">
             <div class="header">
-                <h3>{{ selected_team['name'] }} - {{ selected_team['laps'] }} laps</h3>
+                <h3>{{ selected_team['name'] }}<br>
+                    Laps: {{ selected_team['laps'] }}<br>
+                    Leader: {{ selected_team['leader'] }}
+                </h3>
             </div>
             <div class="content">
                 <table class="pure-table">

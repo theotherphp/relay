@@ -14,12 +14,14 @@
                     <thead>
                         <tr>
                             <td>Team Name</td>
+                            <td>Leader</td>
                             <td>Lap Count</td>
                         </tr>
                     </thead>
                     {% for team in teams_by_laps %}
                         <tr>
                             <td><a href="/team/{{team['id']}}">{{ team['name'] }}</a></td>
+                            <td>{{ team['leader'] }}</td>
                             <td>{{ team['laps'] }}</td>
                         </tr>
                     {% end %}
