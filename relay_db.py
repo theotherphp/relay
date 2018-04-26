@@ -147,3 +147,17 @@ class RelayDB(object):
         if len(tags) > 0:
             # Shouldn't happen
             logging.warn('unassigned tags: %s' % tags)
+
+
+    @coroutine
+    def zero_all_laps(self):
+        yield r.table(WALKER_TABLE).update({
+            'laps': 0, 
+            'last_updated_time': 0.0, 
+            'lap_times': []
+        }).run(self.conn)
+        yield r.table(TEAM_TABLE).update({
+            'laps': 0, 
+            'avg_laps': 0.0
+        }).run(self.conn)
+
