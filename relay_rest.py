@@ -138,3 +138,14 @@ class TeamsHandler(RelayHandler):
         teams = json.loads(self.request.body)
         self.db.insert_teams(teams)
         self.finish()
+
+
+class ZeroHandler(RelayHandler):
+    @coroutine
+    def get(self):
+        raise NotImplementedError
+
+    @coroutine
+    def post(self):
+        self.db.zero_all_laps()
+        self.redirect('/teams/')
