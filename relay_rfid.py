@@ -2,6 +2,7 @@
 Read and write RFID tags for the Relay app
 """
 
+import argparse
 from functools import partial
 import logging
 from signal import signal, SIGTERM, SIGINT
@@ -44,7 +45,6 @@ def sig_handler(sig, frame):
     sys.exit(0)
 
 
-
 if __name__ == '__main__':
     logging.info('starting')
     reader = None
@@ -52,12 +52,26 @@ if __name__ == '__main__':
     signal(SIGTERM, partial(sig_handler))
     signal(SIGINT, partial(sig_handler))
 
+    parser = argparse.ArgumentParser(description='Relay RFID reader/writer')
+    parser.add_argument('--reader', default='', help='continuous read tags')
+    parser.add_argument('--writer', default='', help='batch write tags')
+    ns = parser.parse_args()
+
     try:
         reader = mercury.Reader('tmr:///dev/ttyUSB0')
         reader.set_region('NA2')
         reader.set_read_plan([1], 'GEN2', read_power=2600)
-        reader.start_reading(post, on_time=250, off_time=250)
-        ws = RelayWebsocket()
+        if ns.reader:
+            reader.start_reading(post, on_time=250, off_time=250)
+            ws = RelayWebsocket()
+        elif ns.writer:
+            rng = ns.writer.split('-')
+            for t in range(int(rng[0]), int(rng[1]) + 1):
+                time.sleep(6)
+                reader.write(str(t).zfill(4))
+                logging.info('wrote %d' % t)
+        else:
+            log.debug('bad parameter?')
     except Exception as e:
         logging.error(str(e))
 
