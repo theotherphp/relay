@@ -11,7 +11,8 @@ from tornado.web import Application, StaticFileHandler
 from tornado.httpserver import HTTPServer
 
 from relay_db import RelayDB
-from relay_rest import MainHandler, TagsHandler, TeamHandler, TeamsHandler, WalkerHandler
+from relay_rest import MainHandler, TagsHandler, TeamHandler, TeamsHandler, \
+WalkerHandler, ZeroHandler
 from relay_feeds import LeaderboardWSHandler, LapsWSHandler
 
 from relay_config import cfg
@@ -57,7 +58,8 @@ def run_app():
         (r'/(ui\.js)', StaticFileHandler, dict(path=app_settings['pure_path'])),
         (r'/teams/', TeamsHandler, handler_args),
         (r'/team/(.*)', TeamHandler, handler_args),
-        (r'/walker/(.*)', WalkerHandler, handler_args)
+        (r'/walker/(.*)', WalkerHandler, handler_args),
+        (r'/zero/', ZeroHandler, handler_args)
     ], autoreload=True, **app_settings)
     server = HTTPServer(app)
     server.listen(cfg.app_port)
