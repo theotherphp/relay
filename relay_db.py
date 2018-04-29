@@ -1,6 +1,7 @@
 import logging
 import rethinkdb as r
 from datetime import datetime as dt
+import emoji
 import time
 from tornado.gen import coroutine, Return
 
@@ -51,6 +52,19 @@ class RelayDB(object):
         logging.debug('closed in %f secs' % duration)
 
  
+    def emojize(self, emoji_name):
+        emoji_name = emoji_name or 'grinning face'
+        cldr_name = ':' + emoji_name.replace(' ', '_') + ':'
+        return emoji.emojize(cldr_name)
+
+
+    @coroutine
+    def update_emoji(self, team_id, short_name):
+        yield r.table(TEAM_TABLE).get(team_id).update({
+            'emoji': self.emojize(short_name)
+        }).run(self.conn)
+
+
     @coroutine
     def insert_teams(self, teams):
         for team in teams:
@@ -58,6 +72,7 @@ class RelayDB(object):
             team['avg_laps'] = 0.0
             if 'id' not in team:
                 team['id'] = yield self.get_next_team_id()
+            team['emoji'] = self.emojize(team['emoji'])
         result = yield r.table(TEAM_TABLE).insert(teams).run(self.conn)
         if result is None or result.get('errors') != 0:
             logging.error('insert_teams %s ' % result)
