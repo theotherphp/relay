@@ -26,7 +26,7 @@ logging.basicConfig(
 def teams_from_csv(fname):
 	teams = []
 	count = 0
-	with open(fname, 'rb') as csvfile:
+	with open(fname, 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for d in reader:
 			if 'dollars' in d:
