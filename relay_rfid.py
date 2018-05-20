@@ -53,25 +53,23 @@ if __name__ == '__main__':
     signal(SIGINT, partial(sig_handler))
 
     parser = argparse.ArgumentParser(description='Relay RFID reader/writer')
-    parser.add_argument('--reader', default='', help='continuous read tags')
-    parser.add_argument('--writer', default='', help='batch write tags')
+    parser.add_argument('--write-range', default='', help='batch write tags')
     ns = parser.parse_args()
 
     try:
         reader = mercury.Reader('tmr:///dev/ttyUSB0')
         reader.set_region('NA2')
-        reader.set_read_plan([1], 'GEN2', read_power=2600)
-        if ns.reader:
-            reader.start_reading(post, on_time=250, off_time=250)
-            ws = RelayWebsocket()
-        elif ns.writer:
-            rng = ns.writer.split('-')
+        pwr = 500 if ns.write_range else 2600  # hundredths of dBm
+        reader.set_read_plan([1], 'GEN2', read_power=pwr)
+        if ns.write_range:
+            rng = ns.write_range.split('-')
             for t in range(int(rng[0]), int(rng[1]) + 1):
                 time.sleep(6)
                 reader.write(str(t).zfill(4))
                 logging.info('wrote %d' % t)
         else:
-            log.debug('bad parameter?')
+            reader.start_reading(post, on_time=250, off_time=250)
+            ws = RelayWebsocket()
     except Exception as e:
         logging.error(str(e))
 
