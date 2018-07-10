@@ -55,7 +55,11 @@ class RelayDB(object):
     def emojize(self, emoji_name):
         emoji_name = emoji_name or 'grinning face'
         cldr_name = ':' + emoji_name.replace(' ', '_') + ':'
-        return emoji.emojize(cldr_name)
+        em = emoji.emojize(cldr_name)
+        if em == cldr_name:
+            logging.warn('no emoji for %s' % emoji_name)
+            em = emoji.emojize(':grinning_face:')
+        return em
 
 
     @coroutine
