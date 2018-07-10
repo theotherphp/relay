@@ -44,8 +44,8 @@ def run_app():
     }
     app = Application([
         # Leaderboard support
-        (r'/(index.\.html)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
-        (r'/(css/index\.css)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
+        (r'/(index.*\.html)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
+        (r'/(css/index.*\.css)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
         (r'/(js/(.*)\.js)', StaticFileHandler, dict(path=app_settings['viewer_path'])),
         (r'/(.*\.mp3)', StaticFileHandler, dict(path=app_settings['static_path'])),
         (r'/', MainHandler, handler_args),

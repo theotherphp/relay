@@ -44,7 +44,7 @@ class LeaderboardWSHandler(RelayWSHandler):
     @coroutine
     def notice_team_changes(self):
         feed = yield r.table(cfg.team_table).order_by(index=r.desc('laps'))\
-            .limit(21).changes(include_initial=True).run(self.db.conn)
+            .limit(14).changes(include_initial=True).run(self.db.conn)
         while (yield feed.fetch_next()):
             change = yield feed.next()
             if self.alive:

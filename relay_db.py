@@ -88,6 +88,24 @@ class RelayDB(object):
         raise Return(teams)
 
 
+    def append_rank_suffix(self, n):
+        # https://stackoverflow.com/questions/3644417/
+        return str(n) + ('th' if 4 <= n % 100 <= 20 else {1:'st', 2:'nd', 3:'rd'}.get(n % 10, 'th'))
+
+
+    @coroutine
+    def get_team_rank(self, team_id):
+        # Get the offset of the team_id in the team table ordered by lap count
+        # TODO: offsets_of doesn't handle ties. Could scan the team table linearly? Ugh.
+        offsets = yield r.table(TEAM_TABLE).order_by(r.desc('laps')).offsets_of(
+            r.row['id'].eq(team_id)
+        ).run(self.conn)
+        if offsets is None or len(offsets) != 1:
+            logging.error('unexpected offsets: %s' % offsets)
+        rank = self.append_rank_suffix(offsets[0] + 1)  # show rank as one-based
+        raise Return(rank)
+
+
     @coroutine
     def get_next_team_id(self):
         team_with_max_id = yield r.table(TEAM_TABLE).max('id').run(self.conn)
@@ -150,10 +168,15 @@ class RelayDB(object):
                     'lap_times': r.row['lap_times'].prepend(now),
                     'last_updated_time': now
                 }).run(self.conn)
-                avg_laps = yield r.table(WALKER_TABLE).get_all(walker['team_id'], index='team_id').avg('laps').run(self.conn)
+                avg_laps = yield r.table(WALKER_TABLE).get_all(
+                    walker['team_id'], index='team_id'
+                ).avg('laps').run(self.conn)
+                rank = yield self.get_team_rank(walker['team_id'])
                 yield r.table(TEAM_TABLE).get(walker['team_id']).update({
+                    'avg_laps': avg_laps,
                     'laps': r.row['laps'] + 1,
-                    'avg_laps': avg_laps
+                    'last_updated_time': now,
+                    'rank': rank
                 }).run(self.conn)
             else:
                 # Not so fast buddy
