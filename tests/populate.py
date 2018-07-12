@@ -39,21 +39,36 @@ def teams_from_csv(fname):
 	return teams
 
 
-def populate_walkers(teams):
+def populate_walkers(teams, random=False):
 	walkers = []
 	used_epcs = []
-	for i in range(0, 200):
-		while True:  # Find a unique EPC since it's the primary key in the DB
-			epc = int(random() * 9999)  # We have four-character strings in the EPC
-			if epc not in used_epcs:
-				used_epcs.append(epc)
-				break
-		team_index = int(random() * len(teams))
-		team_id = teams[team_index]['id']
-		walkers.append({
-			'id': epc,
-			'team_id': team_id,
-		})
+
+	if random:
+		for i in range(0, 200):
+			while True:  # Find a unique EPC since it's the primary key in the DB
+				epc = int(random() * 9999)  # We have four-character strings in the EPC
+				if epc not in used_epcs:
+					used_epcs.append(epc)
+					break
+			team_index = int(random() * len(teams))
+			team_id = teams[team_index]['id']
+			walkers.append({
+				'id': epc,
+				'team_id': team_id,
+			})
+	else:
+		for team in teams:
+			if team.get('tags') is '':
+				continue
+			l = [int(t) for t in team['tags'].split('-')]
+			tags = range(min(l), max(l) + 1)
+			for tag in tags:
+				if tag in used_epcs:
+					logging.error('duplicate tag %d in team %s' % tag, team['name'])
+				else:
+					used_epcs.append(tag)
+					walkers.append(dict(id=tag, team_id=team['id']))
+
 	requests.post(cfg.rest_url('/tags'), json=walkers)
 	return [w['id'] for w in walkers] 
 
@@ -68,8 +83,14 @@ def walk_laps(tags):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Make up some fake data for testing')
-	parser.add_argument('--csv-file', default='', \
-		help='Pathname to CSV file')
+	parser.add_argument(
+		'--csv-file', default='',
+		help='Pathname to CSV file'
+	)
+	parser.add_argument(
+		'--walk', default=False,
+		help='Start walking?'
+	)
 	ns = parser.parse_args()
 
 	if ns.csv_file:
@@ -80,4 +101,5 @@ if __name__ == '__main__':
 		resp = requests.get(cfg.rest_url('/tags'))
 		tags = json.loads(resp.text)
 
-	walk_laps(tags)
+	if ns.walk:
+		walk_laps(tags)
