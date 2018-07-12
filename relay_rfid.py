@@ -64,7 +64,7 @@ if __name__ == '__main__':
         if ns.write_range:
             rng = ns.write_range.split('-')
             for t in range(int(rng[0]), int(rng[1]) + 1):
-                time.sleep(6)
+                time.sleep(5)
                 reader.write(str(t).zfill(4))
                 logging.info('wrote %d' % t)
         else:
@@ -74,8 +74,9 @@ if __name__ == '__main__':
         logging.error(str(e))
 
     try:
-        while True:
-            time.sleep(60)
+        if not ns.write_range:
+            while True:
+                time.sleep(60)
     finally:
         logging.info('exiting')
         if reader:
