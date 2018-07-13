@@ -15,7 +15,7 @@
                         <tr>
                             <td>Tag ID</td>
                             <td>Lap Count</td>
-                            <td>Lap Times</td>
+                            <td>Time Last Scanned</td>
                         </tr>
                     </thead>
                     <tr>
@@ -23,13 +23,6 @@
                         <td>{{ walker['laps'] }}</td>
                         <td>{{ friendly_date(walker['last_updated_time']) }}</td>
                     </tr>
-                    {% for lt in walker['lap_times'] %}
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td>{{ friendly_date(lt) }}</td>
-                        </tr>
-                    {% end %}
                 </table>
             </div>
         </div>

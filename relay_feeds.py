@@ -55,7 +55,7 @@ class LeaderboardWSHandler(RelayWSHandler):
 
     @coroutine
     def notice_walker_changes(self):
-        feed = yield r.table(cfg.walker_table).without('lap_times')\
+        feed = yield r.table(cfg.walker_table)\
             .changes(include_initial=True).run(self.db.conn)
         while (yield feed.fetch_next()):
             change = yield feed.next()

@@ -150,7 +150,6 @@ class RelayDB(object):
         for walker in walkers:
             walker['laps'] = 0
             walker['last_updated_time'] = 0.0
-            walker['lap_times'] = []
         result = yield r.table(WALKER_TABLE).insert(walkers).run(self.conn)
         if result is None or result.get('errors') != 0:
             logging.error('insert_walkers %s' % result)
@@ -169,7 +168,6 @@ class RelayDB(object):
                 # Increment lap totals
                 yield r.table(WALKER_TABLE).get(walker['id']).update({
                     'laps': r.row['laps'] + 1,
-                    'lap_times': r.row['lap_times'].prepend(now),
                     'last_updated_time': now
                 }).run(self.conn)
                 avg_laps = yield r.table(WALKER_TABLE).get_all(
@@ -196,7 +194,6 @@ class RelayDB(object):
         yield r.table(WALKER_TABLE).update({
             'laps': 0, 
             'last_updated_time': 0.0, 
-            'lap_times': []
         }).run(self.conn)
         yield r.table(TEAM_TABLE).update({
             'laps': 0, 
