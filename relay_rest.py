@@ -130,7 +130,8 @@ class TeamsHandler(RelayHandler):
             title='Teams',
             teams=teams,
             teams_by_laps=teams_by_laps,
-            selected_team=None
+            selected_team=None,
+            total_laps = sum(t['laps'] for t in teams)
         )
 
     @coroutine
